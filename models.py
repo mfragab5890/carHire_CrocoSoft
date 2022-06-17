@@ -16,3 +16,27 @@ def setup_db(app):
     mysql = MySQL(app)
     return mysql
 
+
+# db_execute function execute a sql statement and return success state and message
+def db_execute(mysql, statement):
+    # Creating a connection cursor
+    cursor = mysql.connection.cursor()
+    # Executing SQL Statements
+    cursor.execute(statement)
+    # Saving the Actions performed on the DB
+    try:
+        mysql.connection.commit()
+    except Exception as e:
+        print(e)
+        return {
+            'success': False,
+            'message': e,
+        }
+    else:
+        return {
+            'success': True,
+            'message': 'Statement executed successfully'
+        }
+    finally:
+        # Closing the cursor
+        cursor.close()
