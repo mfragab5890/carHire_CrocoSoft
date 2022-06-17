@@ -8,7 +8,7 @@ def setup_db(app):
     app.config[ 'MYSQL_HOST' ] = 'localhost'
     # db username
     app.config[ 'MYSQL_USER' ] = 'root'
-    # db password
+    # db password better stored as enviroment variable
     app.config[ 'MYSQL_PASSWORD' ] = 'tafiTAFI'
     # db name
     app.config[ 'MYSQL_DB' ] = 'car_hire'
@@ -17,14 +17,18 @@ def setup_db(app):
     return mysql
 
 
-# db_execute function execute a sql statement and return success state and message
-def db_execute(mysql, statement):
+# db_execute function execute a sql statement(s) and return success state and message
+def db_execute(mysql, statements):
     # Creating a connection cursor
     cursor = mysql.connection.cursor()
     # Executing SQL Statements
-    cursor.execute(statement)
-    # Saving the Actions performed on the DB
+    if isinstance(statements, str):
+        cursor.execute(statements)
+    elif isinstance(statements, list):
+        for statement in statements:
+            cursor.execute(statement)
     try:
+        # Saving the Actions performed on the DB
         mysql.connection.commit()
     except Exception as e:
         print(e)
@@ -40,3 +44,4 @@ def db_execute(mysql, statement):
     finally:
         # Closing the cursor
         cursor.close()
+
