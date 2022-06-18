@@ -17,7 +17,7 @@ def setup_db(app):
     return mysql
 
 
-# db_execute function execute a sql statement(s) and return success state and message
+# db_execute function execute a sql statement(s) insert, update and delete then return success state and message
 def db_execute(mysql, statements):
     # Creating a connection cursor
     cursor = mysql.connection.cursor()
@@ -46,6 +46,32 @@ def db_execute(mysql, statements):
         cursor.close()
 
 
+# db_select function execute a sql select statement then return success state and results
+def db_select(mysql, statement):
+    # Creating a connection cursor
+    cursor = mysql.connection.cursor()
+
+    try:
+        # Executing SQL Select Statements
+        cursor.execute(statement)
+        results = cursor.fetchall()
+    except Exception as e:
+        print(e)
+        return {
+            'success': False,
+            'message': e,
+        }
+    else:
+        return {
+            'success': True,
+            'message': 'Statement executed successfully',
+            'results': results,
+        }
+    finally:
+        # Closing the cursor
+        cursor.close()
+
+
 def db_create_all(mysql):
     # create customers table
     customers = '''CREATE TABLE IF NOT EXISTS customers (
@@ -61,6 +87,8 @@ def db_create_all(mysql):
     CONSTRAINT UC_Customer UNIQUE (Email, Phone)
     )
     '''
+
+    # create vehicles types table
     vehicles_types = '''CREATE TABLE IF NOT EXISTS vehicles_types (
     ID int NOT NULL AUTO_INCREMENT,
     Name varchar(255) NOT NULL,
@@ -69,43 +97,49 @@ def db_create_all(mysql):
     CONSTRAINT UC_Customer UNIQUE (Name)
     )
     '''
+
+    # create vehicles table
     vehicles = '''CREATE TABLE IF NOT EXISTS vehicles (
-        ID int NOT NULL AUTO_INCREMENT,
-        Make varchar(255) NOT NULL,
-        Model varchar(255) NOT NULL,
-        Year int NOT NULL,
-        Color varchar(255) NOT NULL,
-        Plate varchar(255) NOT NULL,
-        TypeId int NOT NULL,
-        DayPrice int NOT NULL,
-        PRIMARY KEY (ID),
-        CONSTRAINT UC_Customer UNIQUE (Plate),
-        FOREIGN KEY (TypeId) REFERENCES vehicles_types(ID)
-        )
-        '''
+    ID int NOT NULL AUTO_INCREMENT,
+    Make varchar(255) NOT NULL,
+    Model varchar(255) NOT NULL,
+    Year int NOT NULL,
+    Color varchar(255) NOT NULL,
+    Plate varchar(255) NOT NULL,
+    TypeId int NOT NULL,
+    DayPrice int NOT NULL,
+    PRIMARY KEY (ID),
+    CONSTRAINT UC_Customer UNIQUE (Plate),
+    FOREIGN KEY (TypeId) REFERENCES vehicles_types(ID)
+    )
+    '''
+
+    # create bookings table
     bookings = '''CREATE TABLE IF NOT EXISTS bookings (
-        ID int NOT NULL AUTO_INCREMENT,
-        VehicleId int NOT NULL,
-        CustomerId int NOT NULL,
-        Created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        Created_by varchar(255) NOT NULL,
-        HireDate DATE NOT NULL,
-        ReturnDate DATE NOT NULL,
-        PRIMARY KEY (ID),
-        FOREIGN KEY (VehicleId) REFERENCES vehicles(ID),
-        FOREIGN KEY (CustomerId) REFERENCES customers(ID)
-        )
-        '''
+    ID int NOT NULL AUTO_INCREMENT,
+    VehicleId int NOT NULL,
+    CustomerId int NOT NULL,
+    Created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    Created_by varchar(255) NOT NULL,
+    HireDate DATE NOT NULL,
+    ReturnDate DATE NOT NULL,
+    PRIMARY KEY (ID),
+    FOREIGN KEY (VehicleId) REFERENCES vehicles(ID),
+    FOREIGN KEY (CustomerId) REFERENCES customers(ID)
+    )
+    '''
+
+    # create invoices table
     invoices = '''CREATE TABLE IF NOT EXISTS invoices (
-        ID int NOT NULL AUTO_INCREMENT,
-        VehicleId int NOT NULL,
-        CustomerId int NOT NULL,
-        Duration int NOT NULL,
-        Price int NOT NULL,
-        ReceivedDate TIMESTAMP NOT NULL,
-        PRIMARY KEY (ID),
-        FOREIGN KEY (VehicleId) REFERENCES vehicles(ID),
-        FOREIGN KEY (CustomerId) REFERENCES customers(ID)
-        )
-        '''
-    db_execute(mysql, [customers, vehicles_types, vehicles, bookings, invoices])
+    ID int NOT NULL AUTO_INCREMENT,
+    VehicleId int NOT NULL,
+    CustomerId int NOT NULL,
+    Duration int NOT NULL,
+    Price int NOT NULL,
+    ReceivedDate TIMESTAMP NOT NULL,
+    PRIMARY KEY (ID),
+    FOREIGN KEY (VehicleId) REFERENCES vehicles(ID),
+    FOREIGN KEY (CustomerId) REFERENCES customers(ID)
+    )
+    '''
+    db_execute(mysql, [ customers, vehicles_types, vehicles, bookings, invoices ])
