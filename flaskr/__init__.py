@@ -167,19 +167,19 @@ def create_app(test_config=None):
     # delete customer by id
     @app.route('/customers/<int:customer_id>', methods=[ 'DELETE' ])
     def delete_customer(customer_id):
-        delete_customer_query = '''delete from customers where ID = 1'''
+        delete_customer_query = f'''delete from customers where ID = {customer_id}'''
         try:
             with app.app_context():
                 result = db_execute(mysql, delete_customer_query)
                 if result[ 'success' ]:
                     return {
                         'success': True,
-                        'message': 'Customer Updated Successfully'
+                        'message': 'Customer Deleted Successfully'
                     }
                 else:
                     return {
                         'success': False,
-                        'message': 'Failed To Update Customer, Check Data And Try Again'
+                        'message': 'Failed To Delete Customer, Check Data And Try Again'
                     }
         except Exception as e:
             print(e)
