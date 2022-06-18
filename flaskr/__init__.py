@@ -1,7 +1,7 @@
 from flask_cors import CORS
 import dateutil.parser
 import babel
-from flask import Flask, jsonify, abort
+from flask import Flask, jsonify, abort, request
 from models import setup_db, db_create_all, db_execute, db_select
 
 
@@ -62,10 +62,42 @@ def create_app(test_config=None):
             print(e)
             abort(400)
 
-    # add new customer
+    # add new customer, this API requires body with firstname, lastname, email, phone
+    # and optional birthday, address, City.
     @app.route('/customers/', methods=[ 'POST' ])
     def add_customer():
-        pass
+        body = request.get_json()
+        firstname = body.get('firstname', None)
+        lastname = body.get('lastname', None)
+        email = body.get('email', None)
+        phone = body.get('email', None)
+        birthday = body.get('birthday', None)
+        address = body.get('address', None)
+        city = body.get('city', None)
+        if firstname and lastname and email and phone:
+            add_customer_query = f'''insert into customers 
+            (LastName, FirstName, Email, Phone, Birthday, Address, City) 
+            VALUES ({lastname}, {firstname}, {email}, {phone}, {birthday}, {address}, {city},)
+            '''
+            try:
+                with app.app_context():
+                    result = db_execute(mysql, add_customer_query)
+                    if result.success:
+                        return {
+                            'success': True,
+                            'message': 'Customer Added Successfully'
+                        }
+                    else:
+                        return {
+                            'success': False,
+                            'message': 'Failed To Add Customer, Check Data And Try Again'
+                        }
+            except Exception as e:
+                print(e)
+                return {
+                    'success': False,
+                    'message': e,
+                }
 
     # update customer
     @app.route('/customers/<int:customer_id>', methods=[ 'PATCH' ])
@@ -85,8 +117,7 @@ def create_app(test_config=None):
         try:
             with app.app_context():
                 data = db_select(mysql, customer_query)
-                print(data)
-            if data['results']:
+            if data[ 'results' ]:
                 return jsonify(data)
             else:
                 return jsonify({
