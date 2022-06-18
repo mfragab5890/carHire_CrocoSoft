@@ -1,8 +1,8 @@
 from flask_cors import CORS
 import dateutil.parser
 import babel
-from flask import Flask,jsonify, abort
-from models import setup_db
+from flask import Flask, jsonify, abort
+from models import setup_db, db_create_all, db_execute
 
 
 # ----------------------------------------------------------------------------#
@@ -11,8 +11,8 @@ from models import setup_db
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
+    # initiate CORS
     CORS(app)
-    mysql = setup_db(app)
 
     # CORS Headers
     @app.after_request
@@ -20,7 +20,13 @@ def create_app(test_config=None):
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,true')
         response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
         return response
+    # initiate mysql connection
+    mysql = setup_db(app)
 
+    # db initialization
+    with app.app_context():
+        db_create_all(mysql)
+        print(mysql.connection)
     # ----------------------------------------------------------------------------#
     # Filters.
     # ----------------------------------------------------------------------------#
