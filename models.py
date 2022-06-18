@@ -45,3 +45,67 @@ def db_execute(mysql, statements):
         # Closing the cursor
         cursor.close()
 
+
+def db_create_all(mysql):
+    # create customers table
+    customers = '''CREATE TABLE IF NOT EXISTS customers (
+    ID int NOT NULL AUTO_INCREMENT,
+    LastName varchar(255) NOT NULL,
+    FirstName varchar(255) NOT NULL,
+    Email varchar(255) NOT NULL,
+    Phone varchar(255) NOT NULL,
+    Birthday DATE,
+    Address varchar(255),
+    City varchar(255),
+    PRIMARY KEY (ID),
+    CONSTRAINT UC_Customer UNIQUE (Email, Phone)
+    )
+    '''
+    vehicles_types = '''CREATE TABLE IF NOT EXISTS vehicles_types (
+    ID int NOT NULL AUTO_INCREMENT,
+    Name varchar(255) NOT NULL,
+    MaxPassengers int NOT NULL,
+    PRIMARY KEY (ID),
+    CONSTRAINT UC_Customer UNIQUE (Name)
+    )
+    '''
+    vehicles = '''CREATE TABLE IF NOT EXISTS vehicles (
+        ID int NOT NULL AUTO_INCREMENT,
+        Make varchar(255) NOT NULL,
+        Model varchar(255) NOT NULL,
+        Year int NOT NULL,
+        Color varchar(255) NOT NULL,
+        Plate varchar(255) NOT NULL,
+        TypeId int NOT NULL,
+        DayPrice int NOT NULL,
+        PRIMARY KEY (ID),
+        CONSTRAINT UC_Customer UNIQUE (Plate),
+        FOREIGN KEY (TypeId) REFERENCES vehicles_types(ID)
+        )
+        '''
+    bookings = '''CREATE TABLE IF NOT EXISTS bookings (
+        ID int NOT NULL AUTO_INCREMENT,
+        VehicleId int NOT NULL,
+        CustomerId int NOT NULL,
+        Created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        Created_by varchar(255) NOT NULL,
+        HireDate DATE NOT NULL,
+        ReturnDate DATE NOT NULL,
+        PRIMARY KEY (ID),
+        FOREIGN KEY (VehicleId) REFERENCES vehicles(ID),
+        FOREIGN KEY (CustomerId) REFERENCES customers(ID)
+        )
+        '''
+    invoices = '''CREATE TABLE IF NOT EXISTS invoices (
+        ID int NOT NULL AUTO_INCREMENT,
+        VehicleId int NOT NULL,
+        CustomerId int NOT NULL,
+        Duration int NOT NULL,
+        Price int NOT NULL,
+        ReceivedDate TIMESTAMP NOT NULL,
+        PRIMARY KEY (ID),
+        FOREIGN KEY (VehicleId) REFERENCES vehicles(ID),
+        FOREIGN KEY (CustomerId) REFERENCES customers(ID)
+        )
+        '''
+    db_execute(mysql, [customers, vehicles_types, vehicles, bookings, invoices])
