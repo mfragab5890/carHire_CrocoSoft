@@ -2,7 +2,7 @@ from flask_cors import CORS
 import dateutil.parser
 import babel
 from flask import Flask, jsonify, abort
-from models import setup_db, db_create_all, db_execute
+from models import setup_db, db_create_all, db_execute, db_select
 
 
 # ----------------------------------------------------------------------------#
@@ -20,13 +20,14 @@ def create_app(test_config=None):
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,true')
         response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
         return response
+
     # initiate mysql connection
     mysql = setup_db(app)
 
     # db initialization
     with app.app_context():
         db_create_all(mysql)
-        print(mysql.connection)
+
     # ----------------------------------------------------------------------------#
     # Filters.
     # ----------------------------------------------------------------------------#
@@ -49,15 +50,49 @@ def create_app(test_config=None):
     # Controllers.
     # ----------------------------------------------------------------------------#
 
-    # Check if server and database is running
+    # Check if server and database is running for testing purpose only
     @app.route('/check', methods=[ 'GET' ])
     def server_check():
         try:
             return jsonify({
                 'success': True,
                 'message': 'Server running',
-
             })
+        except Exception as e:
+            print(e)
+            abort(400)
+
+    # add new customer
+    @app.route('/customers/', methods=[ 'POST' ])
+    def add_customer():
+        pass
+
+    # update customer
+    @app.route('/customers/<int:customer_id>', methods=[ 'PATCH' ])
+    def update_customer(customer_id):
+        pass
+
+    # update customer
+    @app.route('/customers/<int:customer_id>', methods=[ 'DELETE' ])
+    def delete_customer(customer_id):
+        pass
+
+    # get customer by id
+    @app.route('/customers/<int:customer_id>', methods=[ 'GET' ])
+    def get_customer(customer_id):
+        customer_query = f'''SELECT * FROM customers where ID = {customer_id}'''
+        print(customer_query)
+        try:
+            with app.app_context():
+                data = db_select(mysql, customer_query)
+                print(data)
+            if data['results']:
+                return jsonify(data)
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': 'No Record Found',
+                })
         except Exception as e:
             print(e)
             abort(400)
