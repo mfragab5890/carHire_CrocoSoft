@@ -70,19 +70,32 @@ def create_app(test_config=None):
         firstname = body.get('firstname', None)
         lastname = body.get('lastname', None)
         email = body.get('email', None)
-        phone = body.get('email', None)
+        phone = body.get('phone', None)
         birthday = body.get('birthday', None)
         address = body.get('address', None)
         city = body.get('city', None)
         if firstname and lastname and email and phone:
-            add_customer_query = f'''insert into customers 
-            (LastName, FirstName, Email, Phone, Birthday, Address, City) 
-            VALUES ({lastname}, {firstname}, {email}, {phone}, {birthday}, {address}, {city},)
-            '''
+            columns = '''insert into customers 
+            (LastName, FirstName, Email, Phone '''
+            values = f'''VALUES ('{lastname}', '{firstname}', '{email}', '{phone}' '''
+            if birthday:
+                columns += ',Birthday'
+                values += f", '{birthday}',"
+            if address:
+                columns += ',Address'
+                values += f", '{address}',"
+            if city:
+                columns += ',City'
+                values += f", '{city}',"
+            columns += ')'
+            values += ')'
+            add_customer_query = columns + values
+            print('query: ', add_customer_query)
             try:
                 with app.app_context():
                     result = db_execute(mysql, add_customer_query)
-                    if result.success:
+                    print('result:', result)
+                    if result[ 'success' ]:
                         return {
                             'success': True,
                             'message': 'Customer Added Successfully'
@@ -99,15 +112,81 @@ def create_app(test_config=None):
                     'message': e,
                 }
 
-    # update customer
+    # update customer by id, this API should receive at least on value to update
     @app.route('/customers/<int:customer_id>', methods=[ 'PATCH' ])
     def update_customer(customer_id):
-        pass
+        body = request.get_json()
+        firstname = body.get('firstname', None)
+        lastname = body.get('lastname', None)
+        email = body.get('email', None)
+        phone = body.get('phone', None)
+        birthday = body.get('birthday', None)
+        address = body.get('address', None)
+        city = body.get('city', None)
+        update_customer_query = '''update customers set '''
+        if lastname:
+            update_customer_query += f'''LastName = '{lastname}','''
+        if firstname:
+            update_customer_query += f'''FirstName = '{firstname}','''
+        if email:
+            update_customer_query += f'''Email = '{email}','''
+        if phone:
+            update_customer_query += f'''Phone = '{phone}','''
+        if birthday:
+            update_customer_query += f'''Birthday = '{birthday}','''
+        if address:
+            update_customer_query += f'''Address = '{address}','''
+        if city:
+            update_customer_query += f'''City = '{city}' '''
+        if update_customer_query.endswith(','):
+            update_customer_query = update_customer_query.rstrip(",")
 
-    # update customer
+        update_customer_query += f'''WHERE ID = {customer_id} '''
+        print('query: ', update_customer_query)
+        try:
+            with app.app_context():
+                result = db_execute(mysql, update_customer_query)
+                print('result:', result)
+                if result[ 'success' ]:
+                    return {
+                        'success': True,
+                        'message': 'Customer Updated Successfully'
+                    }
+                else:
+                    return {
+                        'success': False,
+                        'message': 'Failed To Update Customer, Check Data And Try Again'
+                    }
+        except Exception as e:
+            print(e)
+            return {
+                'success': False,
+                'message': e,
+            }
+
+    # delete customer by id
     @app.route('/customers/<int:customer_id>', methods=[ 'DELETE' ])
     def delete_customer(customer_id):
-        pass
+        delete_customer_query = '''delete from customers where ID = 1'''
+        try:
+            with app.app_context():
+                result = db_execute(mysql, delete_customer_query)
+                if result[ 'success' ]:
+                    return {
+                        'success': True,
+                        'message': 'Customer Updated Successfully'
+                    }
+                else:
+                    return {
+                        'success': False,
+                        'message': 'Failed To Update Customer, Check Data And Try Again'
+                    }
+        except Exception as e:
+            print(e)
+            return {
+                'success': False,
+                'message': e,
+            }
 
     # get customer by id
     @app.route('/customers/<int:customer_id>', methods=[ 'GET' ])
